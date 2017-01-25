@@ -112,8 +112,12 @@ func (l LinuxExecutor) Close() {
 	l.dbusConn.Close()
 }
 
-func NewExecutor(c SystemdConnection) SystemdExecutor {
-	return LinuxExecutor{c}
+func NewSystemExecutor() SystemdExecutor {
+	executor, err := realExecutor()
+	if err != nil {
+		panic(err)
+	}
+	return executor
 }
 
 func unitFromStatus(conn SystemdConnection, status *dbus.UnitStatus) (*Unit, error) {

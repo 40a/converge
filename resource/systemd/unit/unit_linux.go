@@ -57,6 +57,7 @@ func newFromStatus(status *dbus.UnitStatus) *Unit {
 		Name:        status.Name,
 		Description: status.Description,
 		ActiveState: status.ActiveState,
+		LoadState:   status.LoadState,
 		Type:        UnitTypeFromName(status.Name),
 	}
 }

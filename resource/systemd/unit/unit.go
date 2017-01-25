@@ -21,6 +21,7 @@ type Unit struct {
 	Name        string
 	Description string
 	ActiveState string
+	LoadState   string
 	Path        string
 	Type        UnitType
 
