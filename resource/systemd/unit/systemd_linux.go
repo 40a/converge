@@ -132,7 +132,7 @@ func unitFromStatus(conn SystemdConnection, status *dbus.UnitStatus) (*Unit, err
 	if u.Type.HasProperties() {
 		typeProperties, err := conn.GetUnitTypeProperties(status.Name, u.Type.UnitTypeString())
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to get unit type properties")
+			return nil, err
 		}
 		u.SetTypedProperties(typeProperties)
 	}
