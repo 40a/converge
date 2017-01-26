@@ -76,8 +76,34 @@ func (l LinuxExecutor) QueryUnit(unitName string, verify bool) (*Unit, error) {
 }
 
 // StartUnit will use dbus to start a unit
-func (l LinuxExecutor) StartUnit(*Unit) error {
-	return nil
+func (l LinuxExecutor) StartUnit(u *Unit) error {
+	ch := make(chan string)
+	defer close(ch)
+
+	_, err := l.dbusConn.StartUnit(u.Name, "replace", ch)
+
+	if err != nil {
+		return err
+	}
+
+	msg := <-ch
+
+	switch msg {
+	case "done":
+		return nil
+	case "canceled":
+		return fmt.Errorf("operation was cancelled while starting: %s", u.Name)
+	case "timeout":
+		return fmt.Errorf("operation timed out while starting %s", u.Name)
+	case "failed":
+		return fmt.Errorf("operation failed while starting %s", u.Name)
+	case "dependency":
+		return fmt.Errorf("operation depends on a failed unit when starting %s", u.Name)
+	case "skipped":
+		return nil
+	}
+
+	return fmt.Errorf("unknown systemd status: %s", msg)
 }
 
 // StopUnit will use dbus to stop a unit
