@@ -94,6 +94,10 @@ func (l LinuxExecutor) ReloadUnit(u *Unit) error {
 	return runDbusCommand(l.dbusConn.ReloadUnit, u.Name, "replace", "reloading")
 }
 
+func (l LinuxExecutor) SendSignal(u *Unit, signal Signal) {
+	l.dbusConn.KillUnit(u.Name, int32(signal))
+}
+
 func runDbusCommand(f func(string, string, chan<- string) (int, error), name, mode, operation string) error {
 	ch := make(chan string)
 	defer close(ch)
