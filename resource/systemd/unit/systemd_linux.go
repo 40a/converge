@@ -90,13 +90,8 @@ func (l LinuxExecutor) RestartUnit(u *Unit) error {
 }
 
 // ReloadUnit will use dbus to reload a unit
-func (l LinuxExecutor) ReloadUnit(*Unit) error {
-	return nil
-}
-
-// UnitStatus will use dbus to get the unit status
-func (l LinuxExecutor) UnitStatus(*Unit) (*Unit, error) {
-	return &Unit{}, nil
+func (l LinuxExecutor) ReloadUnit(u *Unit) error {
+	return runDbusCommand(l.dbusConn.ReloadUnit, u.Name, "replace", "reloading")
 }
 
 func runDbusCommand(f func(string, string, chan<- string) (int, error), name, mode, operation string) error {
