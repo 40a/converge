@@ -77,43 +77,16 @@ func (l LinuxExecutor) QueryUnit(unitName string, verify bool) (*Unit, error) {
 
 // StartUnit will use dbus to start a unit
 func (l LinuxExecutor) StartUnit(u *Unit) error {
-	ch := make(chan string)
-	defer close(ch)
-
-	_, err := l.dbusConn.StartUnit(u.Name, "replace", ch)
-
-	if err != nil {
-		return err
-	}
-
-	msg := <-ch
-
-	switch msg {
-	case "done":
-		return nil
-	case "canceled":
-		return fmt.Errorf("operation was cancelled while starting: %s", u.Name)
-	case "timeout":
-		return fmt.Errorf("operation timed out while starting %s", u.Name)
-	case "failed":
-		return fmt.Errorf("operation failed while starting %s", u.Name)
-	case "dependency":
-		return fmt.Errorf("operation depends on a failed unit when starting %s", u.Name)
-	case "skipped":
-		return nil
-	}
-
-	return fmt.Errorf("unknown systemd status: %s", msg)
+	return runDbusCommand(l.dbusConn.StartUnit, u.Name, "replace", "starting")
 }
 
 // StopUnit will use dbus to stop a unit
-func (l LinuxExecutor) StopUnit(*Unit) error {
-	return nil
+func (l LinuxExecutor) StopUnit(u *Unit) error {
+	return runDbusCommand(l.dbusConn.StopUnit, u.Name, "replace", "stopping")
 }
 
-// RestartUnit will use dbus to restart a unit
-func (l LinuxExecutor) RestartUnit(*Unit) error {
-	return nil
+func (l LinuxExecutor) RestartUnit(u *Unit) error {
+	return runDbusCommand(l.dbusConn.RestartUnit, u.Name, "replace", "restarting")
 }
 
 // ReloadUnit will use dbus to reload a unit
@@ -124,6 +97,32 @@ func (l LinuxExecutor) ReloadUnit(*Unit) error {
 // UnitStatus will use dbus to get the unit status
 func (l LinuxExecutor) UnitStatus(*Unit) (*Unit, error) {
 	return &Unit{}, nil
+}
+
+func runDbusCommand(f func(string, string, chan<- string) (int, error), name, mode, operation string) error {
+	ch := make(chan string)
+	defer close(ch)
+	_, err := f(name, mode, ch)
+	if err != nil {
+		return err
+	}
+	msg := <-ch
+	fmt.Println("read from channel: ", msg)
+	switch msg {
+	case "done":
+		return nil
+	case "canceled":
+		return fmt.Errorf("operation was cancelled while %s: %s", operation, name)
+	case "timeout":
+		return fmt.Errorf("operation timed out while %s: %s", operation, name)
+	case "failed":
+		return fmt.Errorf("operation failed while %s: %s", operation, name)
+	case "dependency":
+		return fmt.Errorf("operation depends on a failed unit when %s: %s", operation, name)
+	case "skipped":
+		return nil
+	}
+	return fmt.Errorf("unknown systemd status: %s", msg)
 }
 
 func realExecutor() (SystemdExecutor, error) {
