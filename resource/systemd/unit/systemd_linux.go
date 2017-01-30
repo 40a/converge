@@ -106,7 +106,6 @@ func runDbusCommand(f func(string, string, chan<- string) (int, error), name, mo
 		return err
 	}
 	msg := <-ch
-	fmt.Println("read from channel: ", msg)
 	switch msg {
 	case "done":
 		return nil
