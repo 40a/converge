@@ -85,6 +85,7 @@ func (l LinuxExecutor) StopUnit(u *Unit) error {
 	return runDbusCommand(l.dbusConn.StopUnit, u.Name, "replace", "stopping")
 }
 
+// RestartUnit will restart a unit
 func (l LinuxExecutor) RestartUnit(u *Unit) error {
 	return runDbusCommand(l.dbusConn.RestartUnit, u.Name, "replace", "restarting")
 }
@@ -94,6 +95,7 @@ func (l LinuxExecutor) ReloadUnit(u *Unit) error {
 	return runDbusCommand(l.dbusConn.ReloadUnit, u.Name, "replace", "reloading")
 }
 
+// SendSignal will send a signal
 func (l LinuxExecutor) SendSignal(u *Unit, signal Signal) {
 	l.dbusConn.KillUnit(u.Name, int32(signal))
 }
@@ -131,10 +133,12 @@ func realExecutor() (SystemdExecutor, error) {
 	return LinuxExecutor{conn}, nil
 }
 
+// Close will close a connection
 func (l LinuxExecutor) Close() {
 	l.dbusConn.Close()
 }
 
+// NewSystemExecutor will generate a new real executor
 func NewSystemExecutor() SystemdExecutor {
 	executor, err := realExecutor()
 	if err != nil {
